@@ -3,4 +3,4 @@ Simple bot for Duck Hunt NES game (OpenCV)
 
 ##Info
 Current only implemented only "clay shooting" mode (it's easier). Ducks will be killed later.
-I use FCEU NES emulator, because it supports mouse clicks as gun shots.
+I use FCEUX NES emulator, because it supports mouse clicks as gun shots.

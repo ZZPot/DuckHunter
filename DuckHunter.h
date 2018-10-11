@@ -1,7 +1,8 @@
 #pragma once
 #include "ScreenFrames/PartFrames/PartFrames.h"
 #include "FeatureDetector/FeatureDetector.h"
-#include "common/common.hpp"
+#include "OpenCV_common.hpp"
+#include "common.h"
 
 #include <windows.h>
 #include <process.h>
@@ -49,7 +50,7 @@ class hunter_eyes
 public:
 	virtual ~hunter_eyes(){}
 	void SetFrameSource(cv::Ptr<part_frames> frame_source);
-	virtual bool GetContext(game_context* p_context) = 0;
+	virtual cv::Mat GetContext(game_context* p_context) = 0;
 protected:
 	cv::Ptr<part_frames> _frame_source;
 };
@@ -74,5 +75,5 @@ protected:
 	cv::Ptr<hunter_eyes> _eyes;
 };
 
-void ClickAtPoint(cv::Point p, bool rmb = false);
+void ClickAtPoint(cv::Point p, bool rmb = false, unsigned time = 100);
 void PressKey(int key, int time = 200);

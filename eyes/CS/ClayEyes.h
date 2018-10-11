@@ -8,7 +8,7 @@ class clay_eyes: public hunter_eyes
 {
 public:
 	clay_eyes();
-	bool GetContext(game_context* p_context);
+	cv::Mat GetContext(game_context* p_context);
 protected:
 	cv::Mat _bg;
 	cv::Mat _safe_mask;

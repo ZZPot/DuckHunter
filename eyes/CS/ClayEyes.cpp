@@ -6,10 +6,10 @@ clay_eyes::clay_eyes()
 	_bg = cv::imread(BG_IMGC);
 	_safe_mask = cv::imread(SAFE_IMGC, cv::IMREAD_GRAYSCALE);
 }
-bool clay_eyes::GetContext(game_context* p_context)
+cv::Mat clay_eyes::GetContext(game_context* p_context)
 {
 	if(_frame_source.empty())
-		return false;
+		return cv::Mat();
 	cv::Mat frame = _frame_source->nextFrame();
 	cv::Mat resized_bg;
 	cv::resize(_bg, resized_bg, frame.size());
@@ -18,6 +18,7 @@ bool clay_eyes::GetContext(game_context* p_context)
 	cv::cvtColor(diff, diff, CV_BGR2GRAY);
 	bitwise_or(diff, _safe_mask, diff);
 	cv::threshold(diff, diff, 5, 255, cv::THRESH_BINARY);
+	cv::imshow("Diff", diff);
 	//cv::imshow("Diff", diff);
 	std::vector<type_condition> cond;
 	cond.resize(1);
@@ -34,5 +35,5 @@ bool clay_eyes::GetContext(game_context* p_context)
 	{
 		obj.tag = TAG_CLAY;
 	}
-	return true;
+	return frame;
 }

@@ -70,7 +70,7 @@ unsigned __stdcall duck_hunter::HunterThreadFunc(void* param)
 			{
 				// SH00T!!!!!!!!!!!!
 				double time = cv::getTickCount();
-				if(hunter._eyes.empty() || !hunter._eyes->GetContext(&context))
+				if(hunter._eyes.empty() || hunter._eyes->GetContext(&context).empty())
 					break;
 				std::vector<cv::Point> shots;
 				for(auto& obj: context.objects)
@@ -104,7 +104,7 @@ unsigned __stdcall duck_hunter::HunterThreadFunc(void* param)
 	return 0;
 }
 
-void ClickAtPoint(cv::Point p, bool rmb)
+void ClickAtPoint(cv::Point p, bool rmb, unsigned time)
 {
 	INPUT mouse_input;
 	mouse_input.type = INPUT_MOUSE;
@@ -115,7 +115,7 @@ void ClickAtPoint(cv::Point p, bool rmb)
     mouse_input.mi.dwFlags = rmb ? MOUSEEVENTF_RIGHTDOWN : MOUSEEVENTF_LEFTDOWN;
     mouse_input.mi.time = 0;
 	SendInput(1, &mouse_input, sizeof(INPUT));
-	Sleep(200);
+	Sleep(time);
 	mouse_input.mi.dwFlags = rmb ? MOUSEEVENTF_RIGHTUP : MOUSEEVENTF_LEFTUP;
 	SendInput(1, &mouse_input, sizeof(INPUT));
 }
