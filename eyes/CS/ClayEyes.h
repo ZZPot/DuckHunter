@@ -8,7 +8,7 @@ class clay_eyes: public hunter_eyes
 {
 public:
 	clay_eyes();
-	cv::Mat GetContext(game_context* p_context);
+	std::vector<Obj2d> GetObjects(cv::Mat frame);
 protected:
 	cv::Mat _bg;
 	cv::Mat _safe_mask;

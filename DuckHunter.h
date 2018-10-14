@@ -17,7 +17,7 @@ typedef unsigned (__stdcall *PTHREAD_FUNC)(PVOID);
 					(unsigned*)(PTID))
 #pragma endregion
 
-#define TIMER_FREQ	0
+#define TIMER_FREQ	10
 #define RELOAD_TIME	100
 
 #define TAG_UNKNOWN		-1
@@ -26,6 +26,7 @@ typedef unsigned (__stdcall *PTHREAD_FUNC)(PVOID);
 #define TAG_DUCK_DOWN	2
 #define TAG_CLAY		3
 #define TAG_CLAY_SHARD	4
+#define CLAY_NAME	"Clay"
 
 #define SHOT_PER_FRAME	1
 
@@ -43,16 +44,17 @@ struct game_context
 	unsigned ducks_missed;
 	unsigned ducks_shot;
 	std::vector<Obj2d> objects;
+	std::vector<cv::Point> aimed;
+	cv::Mat last_frame;
+	bool is_valid;
 };
 
 class hunter_eyes
 {
 public:
 	virtual ~hunter_eyes(){}
-	void SetFrameSource(cv::Ptr<part_frames> frame_source);
-	virtual cv::Mat GetContext(game_context* p_context) = 0;
+	virtual std::vector<Obj2d> GetObjects(cv::Mat frame) = 0;
 protected:
-	cv::Ptr<part_frames> _frame_source;
 };
 
 class duck_hunter
@@ -63,7 +65,11 @@ public:
 	void Run();
 	void Pause();
 	bool SetEyes(cv::Ptr<hunter_eyes> eyes);
+	virtual int GetContext(game_context* context);
+	void SetFrameSource(cv::Ptr<part_frames> frame_source);
 protected:
+	int LocateTargets();
+	int Shoot();
 	static unsigned __stdcall HunterThreadFunc(void* param);
 protected:
 	ts_state<hunter_state> _state;
@@ -71,8 +77,9 @@ protected:
 	HANDLE _run_event;
 	HANDLE _stop_event;
 	HANDLE _hunter_thread;
-	
+	cv::Ptr<part_frames> _frame_source;
 	cv::Ptr<hunter_eyes> _eyes;
+	game_context _current_context;
 };
 
 void ClickAtPoint(cv::Point p, bool rmb = false, unsigned time = 100);

@@ -1,11 +1,6 @@
 #include "DuckHunter.h"
 #include <iostream>
 
-void hunter_eyes::SetFrameSource(cv::Ptr<part_frames> frame_source)
-{
-	_frame_source = frame_source;
-	// reset?
-}
 duck_hunter::duck_hunter():
 _state(HS_PAUSED)
 {
@@ -14,6 +9,7 @@ _state(HS_PAUSED)
 	_stop_event = CreateEvent(NULL, TRUE, FALSE, NULL);
 	DWORD dwThreadId;
 	_hunter_thread = BeginThreadEx(NULL, 0, duck_hunter::HunterThreadFunc, this, 0, &dwThreadId);
+	_current_context.is_valid = false;
 }
 duck_hunter::~duck_hunter()
 {
@@ -28,9 +24,8 @@ void duck_hunter::Run()
 	if(_state == HS_RUN || _state == HS_UNKNOWN)
 		return;
 	_state = HS_RUN;
-	game_context context;
-	if(!_eyes.empty())
-		_eyes->GetContext(&context);
+	if(!_frame_source.empty())
+		_frame_source->nextFrame();
 	SetEvent(_run_event);
 }
 void duck_hunter::Pause()
@@ -47,6 +42,53 @@ bool duck_hunter::SetEyes(cv::Ptr<hunter_eyes> eyes)
 	_eyes = eyes;
 	return true;
 }
+int duck_hunter::GetContext(game_context* context)
+{
+	int res = 0;
+	if (_current_context.is_valid)
+	{
+		*context = _current_context;
+		res = 1;
+	}
+	return res;
+}
+void duck_hunter::SetFrameSource(cv::Ptr<part_frames> frame_source)
+{
+	_frame_source = frame_source;
+	// reset?
+}
+int duck_hunter::LocateTargets()
+{
+	int res = 0;
+	_current_context.last_frame = _frame_source->nextFrame();
+	_current_context.objects = _eyes->GetObjects(_current_context.last_frame);
+	_current_context.aimed.clear();
+	for (auto& obj : _current_context.objects)
+	{
+		if (obj.tag == TAG_DUCK || obj.tag == TAG_CLAY) //need to use loadable targetTagList
+		{
+			_current_context.aimed.push_back(obj.r_rect.center);
+			res++;
+		}
+	}
+	_current_context.is_valid = true;
+	return res;
+}
+int duck_hunter::Shoot()
+{
+	int res = 0;
+	if (_current_context.aimed.size() > SHOT_PER_FRAME)
+		_current_context.aimed.resize(SHOT_PER_FRAME);
+	auto window_offset = _frame_source->GetOffset();
+	for (auto point : _current_context.aimed)
+	{
+		point += window_offset;
+		ClickAtPoint(point);
+		std::cout << "Shot at " << point.x << ":" << point.y << std::endl;
+	}
+
+	return res;
+}
 unsigned __stdcall duck_hunter::HunterThreadFunc(void* param)
 {
 	duck_hunter& hunter = *(duck_hunter*)param;
@@ -57,7 +99,6 @@ unsigned __stdcall duck_hunter::HunterThreadFunc(void* param)
 	if(wait_result == WAIT_OBJECT_0)
 		return 0;
 	std::cout << "Start\n";
-	game_context context;
 	do
 	{
 		wait_result = WaitForMultipleObjects(2, pause_pair, FALSE, TIMER_FREQ);
@@ -67,34 +108,20 @@ unsigned __stdcall duck_hunter::HunterThreadFunc(void* param)
 			wait_result = WaitForMultipleObjects(2, run_pair, FALSE, INFINITE); // in-game run
 			break;
 		case WAIT_TIMEOUT:
-			{
-				// SH00T!!!!!!!!!!!!
-				double time = cv::getTickCount();
-				if(hunter._eyes.empty() || hunter._eyes->GetContext(&context).empty())
+			{	
+				if(hunter._eyes.empty() || hunter._frame_source.empty())
 					break;
-				std::vector<cv::Point> shots;
-				for(auto& obj: context.objects)
-				{
-					if(obj.tag == TAG_DUCK || obj.tag == TAG_CLAY)
-					{
-						shots.push_back(obj.r_rect.center);
-					}
-				}
-				if(shots.size() > SHOT_PER_FRAME)
-					shots.resize(SHOT_PER_FRAME);
-				double locate_time = ((double)cv::getTickCount() - time)/cv::getTickFrequency();
-				if(locate_time > 0.05)
+				double time = cv::getTickCount();
+				int objects_located = hunter.LocateTargets();
+				double locate_time = ((double)cv::getTickCount() - time) / cv::getTickFrequency(); // for debug
+				if (locate_time > 0.05)
 					std::cout << "Locate time: " << locate_time << std::endl;
-				for(auto& point: shots)
+				//hunter.Shoot();
+				if (hunter._current_context.aimed.size())
 				{
-					ClickAtPoint(point);
-					std::cout << "Shot";
-				}
-				if(shots.size())
-				{
-					//std::cout << "\tReloading... ";
-					wait_result = WaitForSingleObject(pause_pair[0], RELOAD_TIME);
-					//std::cout << "\tReloaded\n";
+				//std::cout << "\tReloading... ";
+				wait_result = WaitForSingleObject(pause_pair[0], RELOAD_TIME);
+				//std::cout << "\tReloaded\n";
 				}
 			}
 			break;

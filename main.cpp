@@ -3,26 +3,40 @@
 #include "eyes/DH/PatEyes.h"
 #include "eyes/CS/ClayEyes.h"
 #include "ScreenFrames/PartFrames/WindowFrames/WindowFrames.h"
+#include "FeatureDetector/Draw/DrawDebug.h"
 #include <iostream>
+
+
+#define CLAY_COLOR cv::Scalar(0, 0, 255)
+
 
 int main()
 {
 	cv::Ptr<clay_eyes> ce = cv::makePtr<clay_eyes>();
-	ce->SetFrameSource(cv::makePtr<window_frames>(true));
 	int key = 0;
 	game_context gc;
 	duck_hunter dh;
 	dh.SetEyes(ce);
+	dh.SetFrameSource(cv::makePtr<window_frames>(true));
 	dh.Run();
+#pragma region COLORING
+	DrawConfig draw_config;
+	draw_conf clay_conf;
+	clay_conf.stroke_type = STROKE_TYPE::STROKE_RECT;
+	clay_conf.stroke_color = CLAY_COLOR;
+	clay_conf.fill_color = CLAY_COLOR;
+	clay_conf.caption_color = CLAY_COLOR;
+	draw_config.SetTag(TAG_CLAY, &clay_conf);
+#pragma endregion
 	do
 	{
+		dh.GetContext(&gc);
 		
-		cv::Mat frame = ce->GetContext(&gc);
-		for(auto& obj: gc.objects)
+		if (!gc.last_frame.empty())
 		{
-			DrawRect(obj.rect, frame, cv::Scalar(255, 255, 255), 3);
+			DrawObjects(gc.last_frame, gc.objects, draw_config);
+			cv::imshow("Debug draw", gc.last_frame);
 		}
-		cv::imshow("Objects", frame);
 		key = cv::waitKey(20);
 		
 	}while(key != 27);
