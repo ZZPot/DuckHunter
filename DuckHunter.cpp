@@ -116,7 +116,7 @@ unsigned __stdcall duck_hunter::HunterThreadFunc(void* param)
 				double locate_time = ((double)cv::getTickCount() - time) / cv::getTickFrequency(); // for debug
 				if (locate_time > 0.05)
 					std::cout << "Locate time: " << locate_time << std::endl;
-				//hunter.Shoot();
+				hunter.Shoot();
 				if (hunter._current_context.aimed.size())
 				{
 				//std::cout << "\tReloading... ";

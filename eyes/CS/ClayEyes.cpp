@@ -13,7 +13,7 @@ std::vector<Obj2d> clay_eyes::GetObjects(cv::Mat frame)
 	cv::Mat diff;
 	cv::absdiff(resized_bg, frame, diff);
 	cv::cvtColor(diff, diff, CV_BGR2GRAY);
-	bitwise_or(diff, _safe_mask, diff);
+	bitwise_and(diff, _safe_mask, diff);
 	cv::threshold(diff, diff, 5, 255, cv::THRESH_BINARY);
 	//cv::imshow("Diff", diff);
 	std::vector<type_condition> cond;

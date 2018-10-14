@@ -22,7 +22,7 @@ int main()
 #pragma region COLORING
 	DrawConfig draw_config;
 	draw_conf clay_conf;
-	clay_conf.stroke_type = STROKE_TYPE::STROKE_RECT;
+	clay_conf.stroke_type = STROKE_TYPE::STROKE_RRECT;
 	clay_conf.stroke_color = CLAY_COLOR;
 	clay_conf.fill_color = CLAY_COLOR;
 	clay_conf.caption_color = CLAY_COLOR;
@@ -31,13 +31,12 @@ int main()
 	do
 	{
 		dh.GetContext(&gc);
-		
 		if (!gc.last_frame.empty())
 		{
 			DrawObjects(gc.last_frame, gc.objects, draw_config);
 			cv::imshow("Debug draw", gc.last_frame);
 		}
-		key = cv::waitKey(20);
+		key = cv::waitKey(TIMER_FREQ);
 		
 	}while(key != 27);
 	return 0;
